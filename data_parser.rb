@@ -78,12 +78,19 @@ end
 planetlog = Parse.new(ARGV[0] || "planet_express_logs.csv")
 
 if ARGV[1]== "report"
-  
+  CSV.open("report.csv", "w+") do |csv|
+    csv << ["Pilot", "Shipments", "Total Revenue", "Payment"]
+    planetlog.pilots.each{ |data| csv << [data[:pilot], data[:shipments], data[:total_revenue], data[:payment]]}
+  end
 
 else
-  puts "\nPLANET DATA:\n"
-  puts planetlog.planets.map{|data| "Shipments to #{data[:planet]} made $#{data[:profit]} this week."}
-  puts"\nPILOT DATA:\n"
-  puts planetlog.pilots.map{|data| "Pilot #{data[:pilot]} brought in #{data[:shipments]} shipments, making a total of $#{data[:total_revenue]}, and earning $#{data[:payment]} in bonuses."}
+  printf("%-8s %8s\n", "PLANET", "PROFIT")
+  puts "--------------------"
+  planetlog.planets.each{ |data| printf("%-8s %10.2f\n", data[:planet], data[:profit])}
+
+  printf("\n%-6s %10s %10s %10s\n", "PILOT", "SHIPMENTS", "REVENUE", "PAYMENT" )
+    puts "---------------------------------------"
+  planetlog.pilots.each{ |data| printf("%-6s %10d %10.2f %10.2f\n", data[:pilot], data[:shipments], data[:total_revenue], data[:payment])}
+
   puts "\nTOTAL PROFIT THIS WEEK: $#{planetlog.total_money}"
 end
