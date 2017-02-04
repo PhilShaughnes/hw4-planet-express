@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'csv'
 require 'pry'
 
@@ -22,11 +23,7 @@ class Delivery
     @profit + other.profit
   end
 
-  def *(other)# why does this work for *, but not +?
-    other.class== Delivery ? @profit*other.profit : @profit*other
-  end
-
-  def coerce(other) #why is this necessary for + but not *?
+  def coerce(other)
     [self.profit, other]
   end
 
@@ -45,8 +42,8 @@ class Parse
   def parse_data(file_name)
       CSV.foreach(file_name, headers: true, header_converters: :symbol) {|row| file << Delivery.new(row)}
       self.total_money = file.inject(:+)
-      #self.pilots = parse_pilots
-      #self.planets = parse_planets
+      self.pilots = parse_pilots
+      self.planets = parse_planets
       file
   end
 
@@ -57,7 +54,7 @@ class Parse
   end
 
   def total_bonus(pilot_name)
-    file.select{|ship| ship.pilot == pilot_name}.inject(:+)*0.1
+    file.select{|ship| ship.pilot == pilot_name}.inject(0,:+)*0.1
   end
 
   def trips(pilot_name)
@@ -70,31 +67,15 @@ class Parse
     end
   end
 
-  def parse_planets2 #can I do this with group_by? or even inject?
-    file.group_by{|ship| ship.destination}.each_value{|v| v.inject(0,:+)}
-  end
-
   def planet_profit(planet)
     file.select {|ship| ship.destination == planet }.inject(0,:+)
   end
 
-
 end
 
 
+planetlog = Parse.new("planet_express_logs.csv")
 
-
-
-data = []
-CSV.foreach("planet_express_logs.csv", headers: true, header_converters: :symbol) {|row| data << Delivery.new(row)}
-
-#total_money = data.map{ |del| del.profit }.inject(:+)
-puts total_money = data.inject(:+)
-
-
-
-planetlog = Parse.new
-planetlog.parse_data("planet_express_logs.csv")
-puts planetlog.trips("Fry")
-puts planetlog.parse_planets.inspect
-puts planetlog.parse_pilots.inspect
+puts "We made $#{planetlog.total_money} this week"
+puts "PLANETS:\n#{planetlog.planets}"
+puts "PILOTS:\n#{planetlog.pilots}"
