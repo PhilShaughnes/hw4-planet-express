@@ -2,7 +2,6 @@
 require 'csv'
 require 'pry'
 
-
 class Delivery
   attr_accessor :destination, :shipped, :num_crates, :profit, :pilot
 
@@ -11,12 +10,16 @@ class Delivery
     @shipped = what_got_shipped
     @num_crates = number_of_crates.to_i
     @profit = money_we_made.to_i
-    @pilot = case destination
-            when "Earth" then "Fry"
-            when "Mars"  then "Amy"
-            when "Uranus" then "Bender"
-            else "Leela"
-            end
+    @pilot = sort_pilot(destination)
+  end
+
+  def sort_pilot(destination)
+    case destination
+      when "Earth" then "Fry"
+      when "Mars"  then "Amy"
+      when "Uranus" then "Bender"
+      else "Leela"
+    end
   end
 
   def +(other)
@@ -49,15 +52,15 @@ class Parse
 
   def parse_pilots
     file.map{|ship| ship.pilot}.uniq.map do |pilot|
-      {pilot: pilot, bonus_earned: total_bonus(pilot), trips: trips(pilot)}
+      {pilot: pilot, shipments: shipments(pilot), total_revenue: total_revenue(pilot), payment: total_revenue(pilot)*0.1}
     end
   end
 
-  def total_bonus(pilot_name)
-    file.select{|ship| ship.pilot == pilot_name}.inject(0,:+)*0.1
+  def total_revenue(pilot_name)
+    file.select{|ship| ship.pilot == pilot_name}.inject(0,:+)
   end
 
-  def trips(pilot_name)
+  def shipments(pilot_name)
     file.select { |ship| ship.pilot == pilot_name }.length
   end
 
@@ -70,12 +73,17 @@ class Parse
   def planet_profit(planet)
     file.select {|ship| ship.destination == planet }.inject(0,:+)
   end
-
 end
 
+planetlog = Parse.new(ARGV[0] || "planet_express_logs.csv")
 
-planetlog = Parse.new("planet_express_logs.csv")
+if ARGV[1]== "report"
+  
 
-puts "We made $#{planetlog.total_money} this week"
-puts "PLANETS:\n#{planetlog.planets}"
-puts "PILOTS:\n#{planetlog.pilots}"
+else
+  puts "\nPLANET DATA:\n"
+  puts planetlog.planets.map{|data| "Shipments to #{data[:planet]} made $#{data[:profit]} this week."}
+  puts"\nPILOT DATA:\n"
+  puts planetlog.pilots.map{|data| "Pilot #{data[:pilot]} brought in #{data[:shipments]} shipments, making a total of $#{data[:total_revenue]}, and earning $#{data[:payment]} in bonuses."}
+  puts "\nTOTAL PROFIT THIS WEEK: $#{planetlog.total_money}"
+end
